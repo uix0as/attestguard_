@@ -1,8 +1,9 @@
 FROM eclipse-temurin:17-jdk-jammy AS build
 WORKDIR /src
 COPY src ./src
-COPY Makefile ./Makefile
-RUN make build && jar --create --file target/credential-detector.jar \
+RUN mkdir -p target/classes \
+    && javac -Xlint:all -Werror -d target/classes $(find src/main/java -name '*.java') \
+    && jar --create --file target/credential-detector.jar \
     --main-class io.attestguard.detector.Main -C target/classes .
 
 FROM eclipse-temurin:17-jre-jammy
