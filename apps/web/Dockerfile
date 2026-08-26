@@ -11,7 +11,9 @@ RUN npm run build --workspace @attestguard/web
 
 FROM node:22-bookworm-slim AS runtime
 ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0
-RUN useradd --system --uid 10001 --no-create-home attestguard
+RUN rm -rf /usr/local/lib/node_modules/npm \
+    && rm -f /usr/local/bin/npm /usr/local/bin/npx \
+    && useradd --system --uid 10001 --no-create-home attestguard
 WORKDIR /app
 COPY --from=build --chown=10001:10001 /workspace/apps/web/.next/standalone ./
 COPY --from=build --chown=10001:10001 /workspace/apps/web/.next/static ./apps/web/.next/static

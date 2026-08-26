@@ -10,7 +10,9 @@ RUN npm run build --workspace @attestguard/api
 
 FROM node:22-bookworm-slim AS runtime
 ENV NODE_ENV=development PORT=8080 POLICY_FILE=/app/policies/default.yaml
-RUN useradd --system --uid 10001 --no-create-home attestguard
+RUN rm -rf /usr/local/lib/node_modules/npm \
+    && rm -f /usr/local/bin/npm /usr/local/bin/npx \
+    && useradd --system --uid 10001 --no-create-home attestguard
 WORKDIR /app
 COPY --from=build --chown=10001:10001 /workspace/node_modules ./node_modules
 COPY --from=build --chown=10001:10001 /workspace/apps/api/dist ./dist
