@@ -1,0 +1,87 @@
+name: attestguard
+
+services:
+  credential-detector:
+    build:
+      context: ./services/credential-detector
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    healthcheck:
+      test: [CMD, bash, -c, "exec 3<>/dev/tcp/127.0.0.1/8090"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+    networks: [security-internal]
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?Set a synthetic development JWT_SECRET with at least 32 characters}
+      JAVA_DETECTOR_URL: http://credential-detector:8090
+      JAVA_DETECTOR_REQUIRED: "true"
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
+      POLICY_FILE: /app/policies/default.yaml
+    ports:
+      - "127.0.0.1:8080:8080"
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    depends_on:
+      credential-detector:
+        condition: service_healthy
+    networks: [security-internal, edge]
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_DEMO_MODE: ${NEXT_PUBLIC_DEMO_MODE:-true}
+    ports:
+      - "127.0.0.1:3000:3000"
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [edge]
+    restart: unless-stopped
+
+  postgres-boundary:
+    image: pgvector/pgvector:pg16
+    profiles: [future-durable-storage]
+    environment:
+      POSTGRES_DB: attestguard
+      POSTGRES_USER: attestguard
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-replace-only-when-enabling-this-profile}
+    volumes:
+      - attestguard-postgres:/var/lib/postgresql/data
+    networks: [security-internal]
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U attestguard -d attestguard]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  edge: {}
+  security-internal:
+    internal: true
+
+volumes:
+  attestguard-postgres: {}

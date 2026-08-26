@@ -35,7 +35,9 @@ interface ErrorResponse {
 }
 
 export function SecurityPlayground({ demoMode }: { demoMode: boolean }) {
-  const [apiUrl, setApiUrl] = useState("http://localhost:8080");
+  const [apiUrl, setApiUrl] = useState(
+    process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080",
+  );
   const [token, setToken] = useState("");
   const [prompt, setPrompt] = useState(
     "김민수 고객의 전화번호 010-1234-5678로 배송 지연 안내를 작성해 줘.",

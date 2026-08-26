@@ -8,9 +8,10 @@
   ],
   "scripts": {
     "build": "npm run build --workspace @attestguard/api && npm run build --workspace @attestguard/web",
+    "demo-token": "node scripts/create-demo-token.mjs",
     "format:check": "npm run format:check --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
-    "test": "npm run test --workspace @attestguard/api",
+    "test": "npm run test --workspace @attestguard/api && npm run test --workspace @attestguard/web",
     "typecheck": "npm run typecheck --workspaces --if-present"
   },
   "engines": {

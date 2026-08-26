@@ -1,0 +1,89 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test
+      - run: npm run test:coverage --workspace @attestguard/api
+      - run: npm run build
+      - run: npm audit --audit-level=high
+
+  java:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - run: make -C services/credential-detector test
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  sast:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        language: [javascript-typescript, java-kotlin]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+      - uses: github/codeql-action/autobuild@v3
+      - uses: github/codeql-action/analyze@v3
+
+  containers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build images
+        run: |
+          docker build -t attestguard-api:ci -f apps/api/Dockerfile .
+          docker build -t attestguard-web:ci -f apps/web/Dockerfile .
+          docker build -t attestguard-detector:ci services/credential-detector
+      - name: Verify non-root images
+        run: |
+          test "$(docker image inspect attestguard-api:ci --format '{{.Config.User}}')" = "10001:10001"
+          test "$(docker image inspect attestguard-web:ci --format '{{.Config.User}}')" = "10001:10001"
+          test "$(docker image inspect attestguard-detector:ci --format '{{.Config.User}}')" = "10001:10001"
+      - uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: attestguard-api:ci
+          format: table
+          exit-code: 1
+          severity: CRITICAL
+          ignore-unfixed: true
+      - uses: anchore/sbom-action@v0.20.6
+        with:
+          image: attestguard-api:ci
+          artifact-name: attestguard-api.spdx.json
+          output-file: attestguard-api.spdx.json
