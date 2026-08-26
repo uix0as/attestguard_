@@ -1,0 +1,49 @@
+version: "1"
+defaults:
+  failure_mode: closed
+  token_ttl_seconds: 900
+  minimum_provider_trust: ENTERPRISE_MANAGED
+  allow_rehydration: true
+rules:
+  - id: block-credentials
+    priority: 100
+    when:
+      entity_types:
+        - PRIVATE_KEY
+        - AWS_ACCESS_KEY
+        - AWS_SECRET_KEY
+        - GITHUB_TOKEN
+        - GENERIC_API_KEY
+        - JWT
+        - DATABASE_URI
+        - PASSWORD_IN_CONFIG
+        - KUBERNETES_SECRET
+        - SESSION_COOKIE
+        - OAUTH_TOKEN
+    action: BLOCK_AND_ALERT
+    minimum_provider_trust: ATTESTED_TEE
+  - id: restricted-requires-attestation
+    priority: 90
+    when:
+      data_class: [RESTRICTED]
+    action: REQUIRE_ATTESTED_MODEL
+    minimum_provider_trust: ATTESTED_TEE
+    require_attestation_for_rehydration: true
+  - id: proprietary-code-private-only
+    priority: 80
+    when:
+      entity_types: [PROPRIETARY_SOURCE_CODE, CONFIDENTIAL_DOCUMENT, INTERNAL_HOSTNAME]
+    action: ROUTE_TO_PRIVATE_MODEL
+    minimum_provider_trust: PRIVATE_VPC
+  - id: tokenize-personal-data
+    priority: 60
+    when:
+      entity_types: [PERSON, EMAIL_ADDRESS, PHONE_NUMBER, KR_PHONE_NUMBER, KR_RRN, CREDIT_CARD, CUSTOMER_ID]
+    action: TOKENIZE_AND_ALLOW
+    minimum_provider_trust: ENTERPRISE_MANAGED
+  - id: public-content
+    priority: 10
+    when:
+      data_class: [PUBLIC]
+    action: ALLOW
+    minimum_provider_trust: PUBLIC_EXTERNAL
