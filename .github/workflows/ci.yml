@@ -57,7 +57,12 @@ jobs:
       - uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
-      - uses: github/codeql-action/autobuild@v3
+      - name: Build Java for CodeQL
+        if: matrix.language == 'java-kotlin'
+        run: make -C services/credential-detector build
+      - name: Autobuild JavaScript and TypeScript for CodeQL
+        if: matrix.language == 'javascript-typescript'
+        uses: github/codeql-action/autobuild@v3
       - uses: github/codeql-action/analyze@v3
 
   containers:
@@ -75,7 +80,7 @@ jobs:
           test "$(docker image inspect attestguard-api:ci --format '{{.Config.User}}')" = "10001:10001"
           test "$(docker image inspect attestguard-web:ci --format '{{.Config.User}}')" = "10001:10001"
           test "$(docker image inspect attestguard-detector:ci --format '{{.Config.User}}')" = "10001:10001"
-      - uses: aquasecurity/trivy-action@0.33.1
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: attestguard-api:ci
           format: table
