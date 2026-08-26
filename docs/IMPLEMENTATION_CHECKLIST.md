@@ -11,24 +11,24 @@
 
 ## Phase 1B — gateway
 
-- [ ] NestJS scaffold and strict TypeScript
-- [ ] JWT-derived tenant context and role guard
-- [ ] Java credential-detector service and client
-- [ ] local regex/checksum/context recognizers and overlap resolution
-- [ ] YAML policy loading with deny override and fail closed
-- [ ] AES-256-GCM token vault and HMAC envelope
-- [ ] mock provider, provider routing, and downgrade protection
-- [ ] OpenAI-compatible chat/responses and security APIs
-- [ ] output token/provenance validation and tool-argument guard
-- [ ] safe event chain and audit verification
+- [x] NestJS scaffold and strict TypeScript
+- [x] JWT-derived tenant context and role guard
+- [x] Java credential-detector service and client
+- [x] local regex/checksum/context recognizers and overlap resolution
+- [x] YAML policy loading with deny override and fail closed
+- [x] AES-256-GCM token vault and HMAC envelope
+- [x] mock provider, provider routing, and downgrade protection
+- [x] OpenAI-compatible chat/responses and security APIs
+- [x] output token/provenance validation and tool-argument guard
+- [x] safe event chain and audit verification
 
 ## Phase 1C — experience and delivery
 
-- [ ] Next.js demo/security console
-- [ ] non-root Dockerfiles and Compose health checks
-- [ ] CI lint, type checks, tests, build, SAST, dependency/container scans, SBOM
-- [ ] synthetic fixtures and security/adversarial tests
-- [ ] local runbook, demo script, and portfolio truth table
+- [x] Next.js demo/security console
+- [x] non-root Dockerfiles and Compose health checks
+- [x] CI lint, type checks, tests, build, SAST, secret/dependency/container scans, SBOM
+- [x] synthetic security/adversarial fixtures for the implemented path
+- [x] local runbook, demo script, and portfolio truth table
 
 ## Extensions
 
